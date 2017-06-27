@@ -4,7 +4,7 @@ import numpy as np
 
 def get_data_from_file(filename, header_string = "I_Flux, I_Bias"):
     """
-    Reads a kallamari noise file and extracts the data, remoing the headers. Returns a list in which each line is one
+    Reads a kallamari noise file and extracts the data, removing the headers. Returns a list in which each line is one
     row of data from the noise file.
     :param filename: Name of file to be read, path is either relative to current location or an absolute path can be given
     :param header_string: A string containing the start of the header row from the data file. This is used to determine
@@ -39,8 +39,13 @@ def get_data_from_file(filename, header_string = "I_Flux, I_Bias"):
 
     return data
 
+def add_headers(matrix, bias_step, headerstring='I_Flux, I_Bias, Voltage, dV/dI F(), Rd(), Sv, Si'):
+    next_headers = [header.strip() for header in headerstring.split(',')]
+    next_headers = np.transpose(np.array([[header + str(bias_step)] for header in next_headers]))
 
-def format_data(data_matrix, num_steps, num_bias_steps=3,):
+    return (np.concatenate((next_headers, matrix),0))
+
+def format_data(data_matrix, num_steps, num_bias_steps=3):
     """
 
     :param data_matrix:
@@ -59,9 +64,13 @@ def format_data(data_matrix, num_steps, num_bias_steps=3,):
     #Seperates data from the first bias step from the rest of the data
     formatted_data = np_matrix[0:num_steps, 0:num_columns]
 
+    #Adds headers to data
+    formatted_data = add_headers(formatted_data,1)
+
     #Combines the data from all bias steps one at a time
     for i in range(0,num_bias_steps):
         next_set = np_matrix[i*num_steps:(i+1)*num_steps, 0:num_columns]
+        next_set = add_headers(next_set, i+2)
         formatted_data = np.concatenate((formatted_data, next_set),1)
 
     return formatted_data
@@ -75,9 +84,8 @@ def get_save_dir():
     return ''
 
 
-def save_csv(filename, processed_data, num_bias_steps, headerstring='I_Flux, I_Bias, Voltage, dV/dI F(), Rd(), Sv, Si'):
-    headers = (headerstring+',')*(num_bias_steps) + headerstring
-    np.savetxt(filename, processed_data, fmt='%s', delimiter=',', header=headers, comments='')
+def save_csv(filename, processed_data):
+    np.savetxt(filename, processed_data, fmt='%s', delimiter=',')
 
 
 def get_num_steps():
