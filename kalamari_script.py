@@ -1,5 +1,6 @@
 from pprint import pprint as pp
 import csv
+import numpy as np
 
 def get_data_from_file(filename, header_string = "I_Flux, I_Bias"):
     """
@@ -15,10 +16,11 @@ def get_data_from_file(filename, header_string = "I_Flux, I_Bias"):
     with open(filename, 'r') as f:
 
         #The noise files use return characters instead of newlines so the entire file is read as one line
-        file_data = f.readline()
+        file_data = f.read()
 
         #Splits the data file into lines using return characters
-        file_data = file_data.split("\r")
+        file_data = file_data.splitlines()
+        # file_data = file_data.split("\r")
 
 
         next_index = 0
@@ -29,18 +31,16 @@ def get_data_from_file(filename, header_string = "I_Flux, I_Bias"):
             nextline = file_data[next_index]
 
         #Creates a list of all lines in the file after the header line.
-        data = file_data[next_index+1:-1]
+        data = file_data[next_index+1:]
         #
         # #Skip past first few lines of irrelevant information
         # for i in range(0,skip_lines):
         #     f.readline()
 
-    pp(data)
-    print(len(data))
     return data
 
 
-def format_data(data_matrix, num_steps, num_bias=4):
+def format_data(data_matrix, num_steps, num_bias_steps=3,):
     """
 
     :param data_matrix:
@@ -48,20 +48,36 @@ def format_data(data_matrix, num_steps, num_bias=4):
     :param num_bias:
     :return:
     """
+    #Seperates each line into seperate data entries and removes whitespace
+    split_matrix = [line.strip().replace(' ', '').split(',') for line in data_matrix]
 
+    # determines the number of data columns
+    num_columns = len(split_matrix[0])
 
+    np_matrix = np.asarray(split_matrix)
+
+    #Seperates data from the first bias step from the rest of the data
+    formatted_data = np_matrix[0:num_steps, 0:num_columns]
+
+    #Combines the data from all bias steps one at a time
+    for i in range(0,num_bias_steps):
+        next_set = np_matrix[i*num_steps:(i+1)*num_steps, 0:num_columns]
+        formatted_data = np.concatenate((formatted_data, next_set),1)
+
+    return formatted_data
 
 
 def get_data_dir():
-    pass
+    return ''
 
 
 def get_save_dir():
-    pass
+    return ''
 
 
-def save_csv():
-    pass
+def save_csv(filename, processed_data, num_bias_steps, headerstring='I_Flux, I_Bias, Voltage, dV/dI F(), Rd(), Sv, Si'):
+    headers = (headerstring+',')*(num_bias_steps) + headerstring
+    np.savetxt(filename, processed_data, fmt='%s', delimiter=',', header=headers, comments='')
 
 
 def get_num_steps():
@@ -75,5 +91,8 @@ def main():
 
 
 if __name__ == "__main__":
-    # parse_file("MICHAELIM6185")
-    get_data_from_file("W34R4C7")
+    num_bias_steps = 3
+
+    file_data = get_data_from_file("W34R4C7")
+    processed_data = format_data(file_data, 60)
+    save_csv('test.csv',processed_data, num_bias_steps)
