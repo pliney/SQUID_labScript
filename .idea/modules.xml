@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/SQUIDlabScript.iml" filepath="$PROJECT_DIR$/.idea/SQUIDlabScript.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../iQuiz/.idea/iQuiz.iml" filepath="$PROJECT_DIR$/../iQuiz/.idea/iQuiz.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/untitled.iml" filepath="$PROJECT_DIR$/.idea/untitled.iml" />
     </modules>
   </component>
